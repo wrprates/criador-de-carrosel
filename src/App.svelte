@@ -173,7 +173,7 @@
   const promptTemplate = `Você é um especialista em criar carrosséis virais para Instagram/LinkedIn seguindo padrões comprovados de alto engajamento.
 
 ESTRUTURA OBRIGATÓRIA (10 SLIDES):
-Slide 1: HOOK COM 3 VERSÕES (25-35 palavras cada)
+Slide 1: HOOK COM 3 VERSÕES (25-35 palavras cada) — NÃO use rótulos como "Hook 1". Apenas o texto do hook.
 Slide 2: Origem + Contexto Inicial (30-35 palavras)
 Slide 3: Primeiras Dificuldades + Obstáculos (30-35 palavras)
 Slide 4: Descoberta/Momento Chave + Insight (30-35 palavras)
@@ -184,10 +184,14 @@ Slide 8: Resultado Final + Números Impressionantes (30-35 palavras)
 Slide 9: Lição Universal + Filosofia (30-35 palavras)
 Slide 10: CTA INSPIRADOR/MOTIVACIONAL com estrutura pedida.
 
+Para os slides 2-10:
+- Campo "hero": título curto (máx. 5-8 palavras), sem rótulos de slide nem termos como "Descoberta/Crise/Slide". Não numere.
+- Campo "body": texto (máx. 35 palavras), sem repetir o hero.
+
 Após os 10 slides, inclua:
 - Elementos Psicológicos Aplicados: 6 gatilhos mentais usados.
 - Por que Este Carrossel Vai Inspirar/Viralizar: mínimo 5 razões específicas com dados da história; cite números/conquistas; explique apelo emocional.
-- 3 Versões do Slide 1: explique brevemente a estratégia de cada hook.
+- 3 Versões do Slide 1: explique brevemente a estratégia de cada hook (máx. 15 palavras cada).
 - Diferencial Único/Poderoso/Devastador: 6+ diferenciais que tornam a história especial.
 
 Regras: linguagem coloquial brasileira, frases curtas e impactantes, números específicos, CAPS pontual para ênfase, zero repetição, tom emocional progressivo, máximo 35 palavras nos slides 2-9, informações reais.
@@ -196,10 +200,10 @@ Nunca invente números ou fatos; evite mortes de outras pessoas; zero conteúdo 
 FORMATO DE RESPOSTA (JSON):
 {
   "slides": [
-    { "title": "string", "versions": ["v1","v2","v3"] },
-    { "title": "string", "body": "string ou lista de bullet" },
+    { "versions": ["v1","v2","v3"] },
+    { "hero": "string", "body": "string ou lista de bullet" },
     ...
-    { "title": "string", "body": "cta final" }
+    { "hero": "string", "body": "cta final" }
   ],
   "elementos_psicologicos": ["..."],
   "por_que_vai_viralizar": ["..."],
@@ -215,17 +219,17 @@ Contexto da história: {HISTORIA}`
 
   function formatSlideContent(slideData = {}, template) {
     if (!slideData) return template.placeholder
-    const { title, body, versions } = slideData
+    const { title, hero, body, versions } = slideData
 
     if (versions?.length) {
-      const hooks = versions.map((text, index) => `Versão ${index + 1}: ${text}`).join('\n')
-      return ['Hook — escolha a mais forte', hooks].filter(Boolean).join('\n')
+      const hooks = versions.map((text) => text).join('\n')
+      return ['Hooks (3 opções)', hooks].filter(Boolean).join('\n')
     }
 
     const normalizedBody = Array.isArray(body) ? body.join('\n') : body ?? ''
-    const hero = title || template.fallbackTitle
+    const heroText = hero || title || template.fallbackTitle
 
-    return [hero, normalizedBody].filter(Boolean).join('\n')
+    return [heroText, normalizedBody].filter(Boolean).join('\n')
   }
 
   function applyAISlides(slidesData = []) {
