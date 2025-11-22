@@ -4,6 +4,8 @@
 
   marked.setOptions({ breaks: true })
 
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY
+
   const slideTemplates = [
     {
       id: 'slide-1',
@@ -102,6 +104,10 @@
   let backgroundColor = '#ffffff'
   let fontStack = 'Space Grotesk, Inter, system-ui, sans-serif'
   let ctaLabel = 'Duplicar template'
+  let storyInput = ''
+  let generating = false
+  let generationError = ''
+  let aiExtras = null
 
   let slidesContent = slideTemplates.map((template) => template.placeholder)
   let activeSlideIndex = 0
@@ -164,6 +170,133 @@
     activeSlideIndex = index
   }
 
+  const promptTemplate = `Você é um especialista em criar carrosséis virais para Instagram/LinkedIn seguindo padrões comprovados de alto engajamento.
+
+ESTRUTURA OBRIGATÓRIA (10 SLIDES):
+Slide 1: HOOK COM 3 VERSÕES (25-35 palavras cada)
+Slide 2: Origem + Contexto Inicial (30-35 palavras)
+Slide 3: Primeiras Dificuldades + Obstáculos (30-35 palavras)
+Slide 4: Descoberta/Momento Chave + Insight (30-35 palavras)
+Slide 5: Luta/Crise + Ponto Baixo (30-35 palavras)
+Slide 6: Persistência + Trabalho Duro (30-35 palavras)
+Slide 7: Breakthrough + Primeira Vitória (30-35 palavras)
+Slide 8: Resultado Final + Números Impressionantes (30-35 palavras)
+Slide 9: Lição Universal + Filosofia (30-35 palavras)
+Slide 10: CTA INSPIRADOR/MOTIVACIONAL com estrutura pedida.
+
+Após os 10 slides, inclua:
+- Elementos Psicológicos Aplicados: 6 gatilhos mentais usados.
+- Por que Este Carrossel Vai Inspirar/Viralizar: mínimo 5 razões específicas com dados da história; cite números/conquistas; explique apelo emocional.
+- 3 Versões do Slide 1: explique brevemente a estratégia de cada hook.
+- Diferencial Único/Poderoso/Devastador: 6+ diferenciais que tornam a história especial.
+
+Regras: linguagem coloquial brasileira, frases curtas e impactantes, números específicos, CAPS pontual para ênfase, zero repetição, tom emocional progressivo, máximo 35 palavras nos slides 2-9, informações reais.
+Nunca invente números ou fatos; evite mortes de outras pessoas; zero conteúdo político ou militante.
+
+FORMATO DE RESPOSTA (JSON):
+{
+  "slides": [
+    { "title": "string", "versions": ["v1","v2","v3"] },
+    { "title": "string", "body": "string ou lista de bullet" },
+    ...
+    { "title": "string", "body": "cta final" }
+  ],
+  "elementos_psicologicos": ["..."],
+  "por_que_vai_viralizar": ["..."],
+  "versoes_slide_1": ["explicação das 3 versões do hook"],
+  "diferenciais": ["..."]
+}
+
+Contexto da história: {HISTORIA}`
+
+  function buildPrompt(story) {
+    return promptTemplate.replace('{HISTORIA}', story)
+  }
+
+  function formatSlideContent(slideData = {}, template) {
+    if (!slideData) return template.placeholder
+    const { title, body, versions } = slideData
+
+    if (versions?.length) {
+      const hooks = versions.map((text, index) => `Versão ${index + 1}: ${text}`).join('\n')
+      return ['Hook — escolha a mais forte', hooks].filter(Boolean).join('\n')
+    }
+
+    const normalizedBody = Array.isArray(body) ? body.join('\n') : body ?? ''
+    const hero = title || template.fallbackTitle
+
+    return [hero, normalizedBody].filter(Boolean).join('\n')
+  }
+
+  function applyAISlides(slidesData = []) {
+    slidesContent = slideTemplates.map((template, index) =>
+      formatSlideContent(slidesData[index], template)
+    )
+    slidesShowHero = slidesShowHero.map(() => true)
+  }
+
+  function mapAIExtras(parsed) {
+    aiExtras = {
+      elementos: parsed?.elementos_psicologicos ?? [],
+      razoes: parsed?.por_que_vai_viralizar ?? [],
+      versoesHook: parsed?.versoes_slide_1 ?? [],
+      diferenciais: parsed?.diferenciais ?? []
+    }
+  }
+
+  async function generateWithAI() {
+    if (!storyInput.trim()) {
+      generationError = 'Descreva a história em um parágrafo curto antes de gerar.'
+      return
+    }
+
+    if (!apiKey) {
+      generationError = 'Defina VITE_OPENAI_API_KEY no seu .env.local (não comitar).'
+      return
+    }
+
+    generationError = ''
+    generating = true
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          temperature: 0.7,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: 'Você é um escritor de carrosséis virais e SEMPRE responde em JSON válido conforme o formato pedido.' },
+            { role: 'user', content: buildPrompt(storyInput.trim()) }
+          ]
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Falha ao chamar a API. Confirme a chave e o saldo.')
+      }
+
+      const payload = await response.json()
+      const content = payload?.choices?.[0]?.message?.content
+      const parsed = JSON.parse(content ?? '{}')
+
+      if (parsed?.slides?.length) {
+        applyAISlides(parsed.slides)
+      }
+
+      mapAIExtras(parsed)
+      focusSlide(0)
+    } catch (error) {
+      generationError = error?.message ?? 'Erro desconhecido ao gerar carrossel.'
+    } finally {
+      generating = false
+    }
+  }
+
 
   const TARGET_WIDTH = 1080
   const TARGET_HEIGHT = 1350
@@ -212,6 +345,27 @@
         <p class="muted">Cole o texto de cada slide (Markdown simples) e exporte em 4:5 com tipografia consistente.</p>
       </div>
     </header>
+
+    <div class="panel__section">
+      <h2>Geração com OpenAI</h2>
+      <p class="muted small">
+        Coloque um parágrafo curto com a história. A chave vem de <code>.env.local</code> como <code>VITE_OPENAI_API_KEY</code> (não comitar).
+      </p>
+      <textarea
+        rows="4"
+        placeholder="Ex: Jovem de 17 anos que vendia brigadeiro na escola virou referência em IA..."
+        bind:value={storyInput}
+      ></textarea>
+      <div class="generation-actions">
+        <button class="primary" on:click={generateWithAI} disabled={generating}>
+          {generating ? 'Gerando…' : 'Gerar carrossel com IA'}
+        </button>
+        <span class="muted tiny">{apiKey ? 'Chave detectada (env)' : 'Sem chave carregada'}</span>
+      </div>
+      {#if generationError}
+        <p class="tiny error">{generationError}</p>
+      {/if}
+    </div>
 
     <div class="panel__section">
       <h2>Identidade</h2>
@@ -326,11 +480,11 @@
           {exporting ? 'Exportando…' : 'Exportar tudo'}
         </button>
       </div>
-    </div>
+      </div>
 
-    <div class="frames">
-      {#each slidesWithParts as slide, index}
-        {#if slide}
+      <div class="frames">
+        {#each slidesWithParts as slide, index}
+          {#if slide}
           {#key slide.id}
             <button
               type="button"
@@ -347,7 +501,6 @@
                     <p class="name">{personaName}</p>
                   {/if}
                 </div>
-                <p class="slide-count">Slide {index + 1}/{totalSlides}</p>
               </header>
               <div class="frame__body">
                 {#if slide.showHero && slide.parts.hero}
@@ -375,5 +528,53 @@
         {/if}
       {/each}
     </div>
+
+    {#if aiExtras}
+      <div class="ai-extras">
+        {#if aiExtras.elementos?.length}
+          <div class="ai-extras__section">
+            <h3>Elementos psicológicos aplicados</h3>
+            <ul>
+              {#each aiExtras.elementos as item}
+                <li>{item}</li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+
+        {#if aiExtras.razoes?.length}
+          <div class="ai-extras__section">
+            <h3>Por que vai inspirar/viralizar</h3>
+            <ul>
+              {#each aiExtras.razoes as item}
+                <li>{item}</li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+
+        {#if aiExtras.versoesHook?.length}
+          <div class="ai-extras__section">
+            <h3>Estratégia das 3 versões do hook</h3>
+            <ul>
+              {#each aiExtras.versoesHook as item}
+                <li>{item}</li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+
+        {#if aiExtras.diferenciais?.length}
+          <div class="ai-extras__section">
+            <h3>Diferenciais únicos</h3>
+            <ul>
+              {#each aiExtras.diferenciais as item}
+                <li>{item}</li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+      </div>
+    {/if}
   </section>
 </main>
