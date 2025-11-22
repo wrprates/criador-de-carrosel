@@ -185,7 +185,7 @@ Slide 9: Lição Universal + Filosofia (30-35 palavras)
 Slide 10: CTA INSPIRADOR/MOTIVACIONAL com estrutura pedida.
 
 Para os slides 2-10:
-- Campo "hero": título curto (máx. 5-8 palavras), sem rótulos de slide nem termos como "Descoberta/Crise/Slide". Não numere.
+- Campo "hero": frase curta (máx. 5-8 palavras) contextual à história. Não use rótulos genéricos de entonação (ex.: nada de "Momento transformador", "Crise de confiança", "Persistência + Trabalho Duro"). Use uma mini-frase específica da história com verbo/dado que represente a entonação. Não numere.
 - Campo "body": texto (máx. 35 palavras), sem repetir o hero.
 
 Após os 10 slides, inclua:
