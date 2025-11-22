@@ -1,5 +1,6 @@
 <script>
   import html2canvas from 'html2canvas'
+  import { onMount } from 'svelte'
   import { marked } from 'marked'
 
   marked.setOptions({ breaks: true })
@@ -108,6 +109,9 @@
   let generating = false
   let generationError = ''
   let aiExtras = null
+  let avatarSrc = '/avatar.jpg'
+  let avatarEnabled = true
+  let avatarMissing = false
 
   let slidesContent = slideTemplates.map((template) => template.placeholder)
   let activeSlideIndex = 0
@@ -164,6 +168,31 @@
         frameRefs[index] = null
       }
     }
+  }
+
+  onMount(async () => {
+    try {
+      const res = await fetch(avatarSrc, { method: 'HEAD' })
+      if (!res.ok) {
+        avatarMissing = true
+        avatarSrc = ''
+      }
+    } catch (e) {
+      avatarMissing = true
+      avatarSrc = ''
+    }
+  })
+
+  function handleAvatarUpload(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      avatarSrc = e.target?.result || ''
+      avatarMissing = false
+      avatarEnabled = true
+    }
+    reader.readAsDataURL(file)
   }
 
   function focusSlide(index) {
@@ -398,6 +427,25 @@ Contexto da história: {HISTORIA}`
           <span>Texto do CTA</span>
           <input type="text" bind:value={ctaLabel} />
         </label>
+        <label class="full">
+          <span>Mostrar avatar</span>
+          <div class="inline-control">
+            <input
+              id="avatar-toggle"
+              type="checkbox"
+              checked={avatarEnabled}
+              on:change={(event) => (avatarEnabled = event.currentTarget.checked)}
+            />
+            <label for="avatar-toggle">Exibir avatar ao lado do handle</label>
+          </div>
+        </label>
+        <label class="full">
+          <span>Avatar (usa /public/avatar.jpg por padrão)</span>
+          <input type="file" accept="image/*" on:change={handleAvatarUpload} />
+          {#if avatarMissing}
+            <p class="tiny error">Arquivo avatar.jpg não encontrado. Faça upload aqui.</p>
+          {/if}
+        </label>
         <label class="full range-control">
           <span>Escala título ({heroScale.toFixed(2)}x)</span>
           <input
@@ -446,7 +494,9 @@ Contexto da história: {HISTORIA}`
                 Ver preview
               </button>
             </div>
+            <label class="sr-only" for={`slide-input-${index}`}>Conteúdo do slide {index + 1}</label>
             <textarea
+              id={`slide-input-${index}`}
               rows="4"
               value={slidesContent[index]}
               placeholder={slide.placeholder}
@@ -499,11 +549,16 @@ Contexto da história: {HISTORIA}`
               use:captureFrame={{ index }}
             >
               <header class="frame__header">
-                <div>
-                  <p class="handle">{personaHandle}</p>
-                  {#if personaName?.trim()}
-                    <p class="name">{personaName}</p>
+                <div class="frame__identity">
+                  {#if avatarEnabled && avatarSrc}
+                    <img src={avatarSrc} alt="Avatar" class="avatar" />
                   {/if}
+                  <div>
+                    <p class="handle">{personaHandle}</p>
+                    {#if personaName?.trim()}
+                      <p class="name">{personaName}</p>
+                    {/if}
+                  </div>
                 </div>
               </header>
               <div class="frame__body">
