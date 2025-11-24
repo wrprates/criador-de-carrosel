@@ -112,6 +112,8 @@
   let avatarSrc = '/avatar.jpg'
   let avatarEnabled = true
   let avatarMissing = false
+  let hookVersions = []
+  let selectedHookIndex = 0
 
   let slidesContent = slideTemplates.map((template) => template.placeholder)
   let activeSlideIndex = 0
@@ -214,8 +216,8 @@ Slide 9: Lição Universal + Filosofia (30-35 palavras)
 Slide 10: CTA INSPIRADOR/MOTIVACIONAL com estrutura pedida.
 
 Para os slides 2-10:
-- Campo "hero": frase curta (máx. 5-8 palavras) contextual à história. Não use rótulos genéricos de entonação (ex.: nada de "Momento transformador", "Crise de confiança", "Persistência + Trabalho Duro"). Use uma mini-frase específica da história com verbo/dado que represente a entonação. Não numere.
-- Campo "body": texto (máx. 35 palavras), sem repetir o hero.
+- Campo "hero": frase curta (máx. 5-8 palavras) que já seja uma mini-introdução chamativa ao corpo. Use verbo ou dado específico da história. NÃO use rótulos genéricos de entonação (ex.: nada de "Momento transformador", "Crise de confiança", "Persistência + Trabalho Duro", "Ponto crítico", "Virada", "Momento da virada", "Vitória inesperada", "Resultados impressionantes", "Lições aprendidas"). Não numere.
+- Campo "body": texto (máx. 35 palavras) que desenvolve o hero, sem repetir o hero.
 
 Após os 10 slides, inclua:
 - Elementos Psicológicos Aplicados: 6 gatilhos mentais usados.
@@ -246,6 +248,42 @@ Contexto da história: {HISTORIA}`
     return promptTemplate.replace('{HISTORIA}', story)
   }
 
+  const bannedHeroTerms = [
+    'momento da virada',
+    'momento transformador',
+    'ponto crítico',
+    'ponto critico',
+    'crise de confiança',
+    'crise',
+    'virada',
+    'trabalho e superação',
+    'trabalho e superacao',
+    'descoberta',
+    'momento chave',
+    'superação',
+    'superacao',
+    'vitória inesperada',
+    'vitoria inesperada',
+    'resultados impressionantes',
+    'lições aprendidas',
+    'licoes aprendidas'
+  ]
+
+  function sanitizeHero(heroText = '', body = '') {
+    const lower = heroText.toLowerCase()
+    const isGeneric = bannedHeroTerms.some((term) => lower.includes(term))
+    if (!isGeneric) return heroText
+
+    const firstSentence = body.split(/[\.\!\?]/)[0]?.trim() ?? ''
+    const fallback = firstSentence
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 8)
+      .join(' ')
+
+    return fallback || heroText
+  }
+
   function formatSlideContent(slideData = {}, template) {
     if (!slideData) return template.placeholder
     const { title, hero, body, versions } = slideData
@@ -256,7 +294,7 @@ Contexto da história: {HISTORIA}`
     }
 
     const normalizedBody = Array.isArray(body) ? body.join('\n') : body ?? ''
-    const heroText = hero || title || template.fallbackTitle
+    const heroText = sanitizeHero(hero || title || template.fallbackTitle, normalizedBody)
 
     return [heroText, normalizedBody].filter(Boolean).join('\n')
   }
@@ -265,6 +303,11 @@ Contexto da história: {HISTORIA}`
     slidesContent = slideTemplates.map((template, index) =>
       formatSlideContent(slidesData[index], template)
     )
+    if (hookVersions?.length) {
+      slidesContent = slidesContent.map((content, currentIndex) =>
+        currentIndex === 0 ? hookVersions[selectedHookIndex] ?? content : content
+      )
+    }
     slidesShowHero = slidesShowHero.map(() => true)
   }
 
@@ -275,6 +318,13 @@ Contexto da história: {HISTORIA}`
       versoesHook: parsed?.versoes_slide_1 ?? [],
       diferenciais: parsed?.diferenciais ?? []
     }
+  }
+
+  function selectHookOption(index) {
+    selectedHookIndex = index
+    slidesContent = slidesContent.map((content, currentIndex) =>
+      currentIndex === 0 ? hookVersions[index] ?? content : content
+    )
   }
 
   async function generateWithAI() {
@@ -318,6 +368,8 @@ Contexto da história: {HISTORIA}`
       const parsed = JSON.parse(content ?? '{}')
 
       if (parsed?.slides?.length) {
+        hookVersions = parsed?.slides?.[0]?.versions ?? []
+        selectedHookIndex = 0
         applyAISlides(parsed.slides)
       }
 
@@ -478,6 +530,31 @@ Contexto da história: {HISTORIA}`
         </label>
       </div>
     </div>
+
+    {#if hookVersions?.length}
+      <div class="panel__section">
+        <h2>Escolha o hook</h2>
+        <p class="muted small">3 opções geradas. Escolha uma para usar como Slide 1.</p>
+        <div class="hook-options">
+          {#each hookVersions as hook, index}
+            <label class={`hook-card ${selectedHookIndex === index ? 'hook-card--active' : ''}`}>
+              <div class="hook-card__header">
+                <input
+                  type="radio"
+                  name="hook-option"
+                  id={`hook-option-${index}`}
+                  value={index}
+                  checked={selectedHookIndex === index}
+                  on:change={() => selectHookOption(index)}
+                />
+                <span>Hook {index + 1}</span>
+              </div>
+              <p>{hook}</p>
+            </label>
+          {/each}
+        </div>
+      </div>
+    {/if}
 
     <div class="panel__section">
       <h2>Conteúdo dos 10 slides</h2>

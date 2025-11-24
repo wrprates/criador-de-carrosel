@@ -304,6 +304,48 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+.hook-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.hook-card {
+  border: 1px solid #e4e4e7;
+  border-radius: 16px;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: border 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.hook-card--active {
+  border-color: #111111;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(17, 17, 17, 0.08);
+}
+
+.hook-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.hook-card input[type='radio'] {
+  width: 1rem;
+  height: 1rem;
+}
+
+.hook-card p {
+  margin: 0;
+  color: #111111;
+}
+
 .error {
   color: #b91c1c;
   background: #fef2f2;
