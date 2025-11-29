@@ -114,6 +114,7 @@
   let avatarMissing = false
   let hookVersions = []
   let selectedHookIndex = 0
+  let promptMode = 'bio'
 
   let slidesContent = slideTemplates.map((template) => template.placeholder)
   let activeSlideIndex = 0
@@ -201,7 +202,7 @@
     activeSlideIndex = index
   }
 
-  const promptTemplate = `Você é um especialista em criar carrosséis virais para Instagram/LinkedIn seguindo padrões comprovados de alto engajamento.
+  const biographyPromptTemplate = `Você é um especialista em criar carrosséis virais para Instagram/LinkedIn seguindo padrões comprovados de alto engajamento.
 
 ESTRUTURA OBRIGATÓRIA (10 SLIDES):
 Slide 1: HOOK COM 3 VERSÕES (25-35 palavras cada) — NÃO use rótulos como "Hook 1". Apenas o texto do hook.
@@ -242,10 +243,58 @@ FORMATO DE RESPOSTA (JSON):
   "diferenciais": ["..."]
 }
 
-Contexto da história: {HISTORIA}`
+Contexto da história: {INPUT}`
+
+  const technicalPromptTemplate = `Você é um especialista em criação de carrosséis virais TÉCNICOS para Instagram e LinkedIn, dominando copy educacional, retenção visual e simplificação de conceitos complexos de dados/IA/estatística/programação.
+
+Crie um carrossel técnico com 10 slides.
+
+ESTRUTURA OBRIGATÓRIA (10 SLIDES):
+Slide 1: HOOK COM 3 VERSÕES (25-35 palavras cada) — sem rótulos como "Hook 1".
+  1) Contraste extremo
+  2) Dado impressionante / verdade desconhecida
+  3) Lição transformadora / promessa clara
+Slide 2: Contexto / Por que importa (30-35 palavras) — problema, dor, relevância prática, onde aparece.
+Slide 3: Definição simples e objetiva (máx. 35 palavras, sem jargão; metáfora curta ok).
+Slide 4: Detalhamento técnico essencial (fórmula, função, trecho de código curto, estrutura ou componentes). Máx. 35 palavras.
+Slide 5: Erros comuns / armadilhas.
+Slide 6: Boas práticas / jeito certo.
+Slide 7: Exemplo prático real (case, cenário, pipeline, dúvida clássica).
+Slide 8: Resultado esperado / impacto (performance, tempo, clareza, negócio).
+Slide 9: Lição final / síntese (até 35 palavras).
+Slide 10: CTA inteligente (modelo fornecido).
+
+Para os slides 2-10:
+- Campo "hero": frase curta (máx. 5-8 palavras) que seja mini-introdução chamativa ao corpo, com verbo/dado específico. NÃO use rótulos genéricos de entonação (ex.: nada de "Momento transformador", "Crise de confiança", "Persistência + Trabalho Duro", "Ponto crítico", "Virada", "Momento da virada", "Vitória inesperada", "Resultados impressionantes", "Lições aprendidas"). Não numere.
+- Campo "body": texto (máx. 35 palavras) que desenvolve o hero, sem repetir o hero.
+
+Após os 10 slides, inclua:
+- Elementos Psicológicos Usados: 5 a 7 (clareza, autoridade, contraste, expectativa, identificação, recompensa, simplicidade técnica etc.).
+- Por que Este Carrossel Vai Viralizar: 5 motivos claros (utilidade prática, conceito difícil simplificado, aplicabilidade imediata, impacto na carreira, retenção visual).
+- 3 Versões do Slide 1 — Estratégia: intenção de cada hook (contraste, dado, transformação) em máx. 15 palavras cada.
+- Diferenciais Únicos: 6+ pontos (profundidade técnica, explicação acessível, código real, alta aplicabilidade, narrativa educacional fluida etc.).
+
+Regras: 30–35 palavras por slide (2–9); clareza total; foco em valor prático; código só se ajudar; fórmulas só se essenciais; frases curtas; linguagem brasileira, humana, simples; tom conversacional. ZERO números ou fatos inventados. Zero política.
+
+FORMATO DE RESPOSTA (JSON):
+{
+  "slides": [
+    { "versions": ["v1","v2","v3"] },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    ...
+    { "hero": "string", "body": "cta final" }
+  ],
+  "elementos_psicologicos": ["..."],
+  "por_que_vai_viralizar": ["..."],
+  "versoes_slide_1": ["explicação das 3 versões do hook"],
+  "diferenciais": ["..."]
+}
+
+Tema técnico: {INPUT}`
 
   function buildPrompt(story) {
-    return promptTemplate.replace('{HISTORIA}', story)
+    const template = promptMode === 'tech' ? technicalPromptTemplate : biographyPromptTemplate
+    return template.replaceAll('{INPUT}', story)
   }
 
   const bannedHeroTerms = [
@@ -329,7 +378,10 @@ Contexto da história: {HISTORIA}`
 
   async function generateWithAI() {
     if (!storyInput.trim()) {
-      generationError = 'Descreva a história em um parágrafo curto antes de gerar.'
+      generationError =
+        promptMode === 'tech'
+          ? 'Descreva o tema técnico em um parágrafo curto antes de gerar.'
+          : 'Descreva a história em um parágrafo curto antes de gerar.'
       return
     }
 
@@ -434,11 +486,21 @@ Contexto da história: {HISTORIA}`
     <div class="panel__section">
       <h2>Geração com OpenAI</h2>
       <p class="muted small">
-        Coloque um parágrafo curto com a história. A chave vem de <code>.env.local</code> como <code>VITE_OPENAI_API_KEY</code> (não comitar).
+        {promptMode === 'tech'
+          ? 'Descreva o tema técnico/conceito. A chave vem de .env.local como VITE_OPENAI_API_KEY (não comitar).'
+          : 'Coloque um parágrafo curto com a história. A chave vem de .env.local como VITE_OPENAI_API_KEY (não comitar).'}
       </p>
+      <label class="sr-only" for="story-input">
+        {promptMode === 'tech' ? 'Tema técnico' : 'Contexto da história'}
+      </label>
       <textarea
+        id="story-input"
         rows="4"
-        placeholder="Ex: Jovem de 17 anos que vendia brigadeiro na escola virou referência em IA..."
+        placeholder={
+          promptMode === 'tech'
+            ? 'Ex: Como usar shap values no XGBoost para explicar previsões de churn...'
+            : 'Ex: Jovem de 17 anos que vendia brigadeiro na escola virou referência em IA...'
+        }
         bind:value={storyInput}
       ></textarea>
       <div class="generation-actions">
@@ -455,6 +517,13 @@ Contexto da história: {HISTORIA}`
     <div class="panel__section">
       <h2>Identidade</h2>
       <div class="form-grid">
+        <label>
+          <span>Tipo de carrossel</span>
+          <select bind:value={promptMode}>
+            <option value="bio">Narrativa / Bio</option>
+            <option value="tech">Técnico</option>
+          </select>
+        </label>
         <label>
           <span>Nome</span>
           <input type="text" bind:value={personaName} />
