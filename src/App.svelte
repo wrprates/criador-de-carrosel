@@ -1,9 +1,57 @@
 <script>
   import html2canvas from 'html2canvas'
-  import { onMount } from 'svelte'
+  import hljs from 'highlight.js'
   import { marked } from 'marked'
+  import { onMount } from 'svelte'
 
-  marked.setOptions({ breaks: true })
+  const renderer = new marked.Renderer()
+
+  const escapeHtml = (value = '') =>
+    String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+
+  const normalizeCode = (value) => {
+    if (typeof value === 'string') return value
+    if (value == null) return ''
+    if (typeof value === 'object') {
+      return String(value.text || value.raw || '')
+    }
+    return String(value)
+  }
+
+  const highlightCode = (code = '', language = '') => {
+    const safeCode = normalizeCode(code)
+    const validLanguage = language && hljs.getLanguage(language)
+    if (validLanguage) {
+      return hljs.highlight(safeCode, { language }).value
+    }
+    const { value } = hljs.highlightAuto(safeCode)
+    return value || escapeHtml(safeCode)
+  }
+
+  renderer.code = (code = '', infostring = '', escaped) => {
+    const rawCode = normalizeCode(code)
+    const fallbackLanguage = typeof code === 'object' ? code?.lang || '' : ''
+    const language = infostring.match(/\S+/)?.[0] ?? fallbackLanguage
+    const autoHighlight = hljs.highlightAuto(rawCode)
+    const validLanguage = language && hljs.getLanguage(language)
+    const langForHighlight = (validLanguage ? language : autoHighlight.language || 'plaintext').replace(
+      /[^a-z0-9\+\-#\.]/gi,
+      ''
+    )
+    const highlighted = highlightCode(rawCode, language)
+    const safeCode = highlighted || (escaped ? rawCode : escapeHtml(rawCode))
+    const displayLang = (langForHighlight || 'code').toUpperCase()
+
+    return `<pre class="code-block" data-lang="${displayLang}"><code class="hljs language-${langForHighlight}">${safeCode}</code></pre>`
+  }
+
+  marked.use({ renderer })
+  marked.setOptions({ breaks: true, langPrefix: 'hljs language-' })
 
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY
 
@@ -123,6 +171,7 @@
   let heroScale = 1
   let bodyScale = 1
   let metaScale = 1
+  let codeScale = 1
   let slidesShowHero = slideTemplates.map(() => true)
 
   $: slides = slideTemplates.map((template, index) => ({
@@ -597,6 +646,16 @@ Tema técnico: {INPUT}`
             bind:value={metaScale}
           />
         </label>
+        <label class="full range-control">
+          <span>Escala código ({codeScale.toFixed(2)}x)</span>
+          <input
+            type="range"
+            min="0.75"
+            max="1.5"
+            step="0.05"
+            bind:value={codeScale}
+          />
+        </label>
       </div>
     </div>
 
@@ -690,7 +749,7 @@ Tema técnico: {INPUT}`
               type="button"
               class="frame"
               class:frame--active={index === activeSlideIndex}
-              style={`background:${backgroundColor}; color:${accentColor}; font-family:${fontStack}; --hero-size:${heroFontByType[slide.type] ?? '2rem'}; --hero-scale:${heroScale}; --body-scale:${bodyScale}; --meta-scale:${metaScale};`}
+              style={`background:${backgroundColor}; color:${accentColor}; font-family:${fontStack}; --hero-size:${heroFontByType[slide.type] ?? '2rem'}; --hero-scale:${heroScale}; --body-scale:${bodyScale}; --meta-scale:${metaScale}; --code-scale:${codeScale};`}
               on:click={() => focusSlide(index)}
               use:captureFrame={{ index }}
             >
