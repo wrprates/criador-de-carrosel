@@ -147,12 +147,12 @@
 
   const totalSlides = slideTemplates.length
 
-  let personaName = ''
+  let personaName = 'Wlademir Prates, PhD'
   let personaHandle = '@datamundo.cientista'
   let accentColor = '#111111'
   let backgroundColor = '#ffffff'
   let fontStack = 'Space Grotesk, Inter, system-ui, sans-serif'
-  let ctaLabel = 'Duplicar template'
+  let ctaLabel = 'Segue meu perfil'
   let storyInput = ''
   let generating = false
   let generationError = ''
@@ -168,7 +168,7 @@
   let activeSlideIndex = 0
   let exporting = false
   let frameRefs = []
-  let heroScale = 1
+  let heroScale = 0.6
   let bodyScale = 1
   let metaScale = 1
   let codeScale = 1
@@ -341,8 +341,185 @@ FORMATO DE RESPOSTA (JSON):
 
 Tema técnico: {INPUT}`
 
+  const densePromptTemplate = `Você é um especialista em criar carrosséis de CONTEÚDO DENSO e DIDÁTICO para Instagram/LinkedIn. Foque em profundidade, utilidade prática e clareza. Use bullets e listas numeradas sempre que ajudarem a ler rápido. Um bloco de código curto (6-12 linhas ou pseudocódigo) é obrigatório em um slide técnico.
+
+ESTRUTURA OBRIGATÓRIA (10 SLIDES):
+Slide 1: HOOK com 3 versões (35-50 palavras cada) — contraste forte, dado surpreendente ou tese polêmica; sem rótulos como "Hook 1".
+Slide 2: Panorama + Por que importa (45-60 palavras) — explique relevância e onde o problema aparece; inclua 2-3 bullets numerados se ajudar.
+Slide 3: Tese central + definição clara (45-60 palavras) — conceito em linguagem simples, metáfora curta opcional.
+Slide 4: Framework/Passos numerados (45-60 palavras) — 3 a 5 passos objetivos com verbos de ação.
+Slide 5: Profundidade conceitual (45-60 palavras) — detalhe nuances, limites, trade-offs; cite quando NÃO usar.
+Slide 6: Código/Algoritmo sintético (até 12 linhas) — forneça bloco de código curto ou pseudocódigo + explicação de 20-25 palavras. Use comentários curtos.
+Slide 7: Exemplos aplicados (45-60 palavras) — 2-4 cenários reais ou cases rápidos.
+Slide 8: Métricas e impacto (45-60 palavras) — números realistas, ganhos/risco; compare "antes vs depois" em 2 bullets.
+Slide 9: Armadilhas + Boas práticas (45-60 palavras) — liste DOs/DON'Ts; priorize ações concretas.
+Slide 10: CTA prático (25-35 palavras) — convide para aplicar; cite tempo/benefício; evite genérico.
+
+Para os slides 2-10:
+- Campo "hero": frase curta (5-9 palavras) específica do assunto, com verbo/dado concreto. NÃO use rótulos genéricos de entonação (ex.: nada de "Momento transformador", "Crise", "Ponto crítico", "Virada", "Resultados impressionantes", "Lições aprendidas").
+- Campo "body": 45-60 palavras (25-35 no CTA) desenvolvendo o hero; use bullets ou listas numeradas quando fizer sentido; mantenha clareza e densidade. Em listas, prefixe com "-" ou "1)" etc.
+
+Após os 10 slides, inclua:
+- Elementos Psicológicos Aplicados: 6-8 (clareza, autoridade, contraste, expectativa, simplicidade técnica, especificidade, evidência numérica, benefício imediato).
+- Por que Este Carrossel Vai Viralizar: mínimo 5 motivos específicos ancorados no assunto (valor prático, profundidade rara, código pronto, aplicabilidade imediata, comparações claras).
+- 3 Versões do Slide 1 — Estratégia: intenção de cada hook (contraste, dado, tese polêmica) em máx. 15 palavras cada.
+- Diferenciais Únicos: 6+ pontos (densidade + clareza, frameworks acionáveis, exemplos reais, código direto, bullets numerados, armadilhas explícitas).
+
+Regras: linguagem brasileira direta; zero floreio narrativo; foco em informação acionável; frases curtas; nunca invente dados; se não houver número realista, use intervalo prudente (ex.: "economia de 5-10%").
+
+FORMATO DE RESPOSTA (JSON):
+{
+  "slides": [
+    { "versions": ["v1","v2","v3"] },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    ...
+    { "hero": "string", "body": "cta final" }
+  ],
+  "elementos_psicologicos": ["..."],
+  "por_que_vai_viralizar": ["..."],
+  "versoes_slide_1": ["explicação das 3 versões do hook"],
+  "diferenciais": ["..."]
+}
+
+Tema/assunto: {INPUT}`
+
+  const sevenItemsPromptTemplate = `Você é um especialista em criar carrosséis técnicos, profissionais e densos para Instagram/LinkedIn. O post sempre lista 7 itens (ex.: "7 funções do tidyverse", "7 pacotes Python", "7 passos para entrevista técnica"). Sempre responda em JSON válido no formato abaixo.
+
+ESTRUTURA (10 SLIDES):
+1) Hook inicial (3 versões, 30–45 palavras cada) — contraste forte ou promessa clara sobre os 7 itens; sem rótulos como "Hook 1".
+2) Enquadramento: por que esses 7 itens importam, critério de escolha, quem ganha com isso (40–55 palavras).
+3) Item 1 — o que é, quando usar, mini exemplo (35–50 palavras; bullets opcionais).
+4) Item 2 — idem (35–50 palavras).
+5) Item 3 — idem (35–50 palavras).
+6) Item 4 — idem (35–50 palavras).
+7) Item 5 — idem (35–50 palavras).
+8) Item 6 — idem (35–50 palavras).
+9) Item 7 — idem (35–50 palavras).
+10) Fechamento + CTA final (25–35 palavras): síntese do ganho e chamada explícita para me seguir se quer ganhar 20k+/mês em dados.
+
+Regras de escrita:
+- Hero de cada slide: 4–8 palavras, verbo/dado específico; nada de rótulos genéricos ("Virada", "Crise", "Lições" etc.).
+- Body: frases curtas; bullets/numeração quando ajudam; foco em clareza técnica e aplicabilidade.
+- Se código ajudar, use um snippet curto (6–10 linhas) em UM dos itens, com 1–2 comentários claros.
+- Nunca invente dados; se precisar, use intervalo plausível ("ganho de 5–10%").
+- Português direto, profissional, sem floreio narrativo.
+
+FORMATO DE RESPOSTA (JSON):
+{
+  "slides": [
+    { "versions": ["v1","v2","v3"] },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "cta final para seguir e buscar 20k+/mês em dados" }
+  ],
+  "elementos_psicologicos": ["clareza", "autoridade", "contraste", "especificidade", "benefício imediato", "..."],
+  "por_que_vai_viralizar": ["5 motivos específicos ancorados no tema"],
+  "diferenciais": ["6+ pontos fortes do conteúdo"]
+}
+
+Tema/assunto: {INPUT}`
+
+  const cheatSheetPromptTemplate = `Você é um especialista em criar carrosséis CHEAT SHEET densos e profissionais (Instagram/LinkedIn). Conteúdo = consulta rápida, sem superficialidade. Cada slide deve trazer densidade real (múltiplos comandos, flags, exemplos concretos). Sempre responda em JSON válido no formato abaixo.
+
+ESTRUTURA (10 SLIDES):
+1) Hook (3 versões, 25–40 palavras cada) — promessa de velocidade/precisão com este cheat; sem rótulos como "Hook 1".
+2) Escopo e pré-reqs (40–60 palavras): o que cobre, público-alvo, ambiente/ferramentas, limitações.
+3) Bloco 1 — comandos/operadores essenciais (45–70 palavras; 4–6 bullets com sintaxe + uso).
+4) Bloco 2 — padrões frequentes/combinações típicas (45–70 palavras; 3–5 bullets com entrada/saída esperada).
+5) Bloco 3 — casos rápidos com parâmetros (45–70 palavras; 3–5 bullets, cada um com comando + efeito).
+6) Bloco 4 — erros/armadilhas (45–70 palavras; 4–6 bullets DO NOT / evitar, cite causa/efeito).
+7) Bloco 5 — boas práticas (45–70 palavras; 4–6 bullets DO com ação concreta e resultado).
+8) Bloco 6 — snippet curto (6–12 linhas) com 1–2 comentários; abaixo, 25–40 palavras explicando entradas/saídas e por que funciona.
+9) Resumo/mini tabela mental (40–60 palavras; pode ser bullets "quando usar X / evitar Y / alternativa Z").
+10) CTA final (25–35 palavras): siga para mais cheat sheets e para chegar a 20k+/mês em dados.
+
+Regras de escrita:
+- Hero de cada slide: 4–8 palavras, verbo/dado específico; nada de rótulos genéricos ("Virada", "Crise", "Lições" etc.).
+- Body: densidade máxima; evite frases vazias. Use bullets numerados ou com prefixo claro; inclua sintaxe exata, flags, entradas/saídas, limites.
+- Se não houver dado real, use intervalo plausível ("ganho de 5–10%"); nunca invente valores absolutos sem base.
+- Português direto, profissional; zero floreio narrativo; priorize comandos, padrões, trade-offs.
+
+FORMATO DE RESPOSTA (JSON):
+{
+  "slides": [
+    { "versions": ["v1","v2","v3"] },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "string ou lista de bullet" },
+    { "hero": "string", "body": "cta final para seguir e buscar 20k+/mês em dados" }
+  ],
+  "elementos_psicologicos": ["clareza", "autoridade", "contraste", "especificidade", "benefício imediato", "..."],
+  "por_que_vai_viralizar": ["5 motivos específicos ancorados no tema"],
+  "diferenciais": ["6+ pontos fortes do conteúdo"]
+}
+
+Tema/assunto: {INPUT}`
+
+  const promptModeConfig = {
+    bio: {
+      helper:
+        'Conte o resumo da história. A chave vem de .env.local como VITE_OPENAI_API_KEY (não comitar).',
+      placeholder: 'Ex: Jovem de 17 anos que vendia brigadeiro na escola virou referência em IA...',
+      missingInput: 'Descreva a história em um parágrafo curto antes de gerar.',
+      inputLabel: 'Contexto da história'
+    },
+    tech: {
+      helper:
+        'Descreva o tema técnico/conceito. A chave vem de .env.local como VITE_OPENAI_API_KEY (não comitar).',
+      placeholder: 'Ex: Como usar shap values no XGBoost para explicar previsões de churn...',
+      missingInput: 'Descreva o tema técnico em um parágrafo curto antes de gerar.',
+      inputLabel: 'Tema técnico'
+    },
+    dense: {
+      helper:
+        'Explique o assunto a ser destrinchado em 10 slides densos; cite objetivo e público.',
+      placeholder:
+        'Ex: Prompt engineering para analistas de marketing: técnicas, exemplos de prompts, erros comuns, métrica de sucesso...',
+      missingInput: 'Descreva o tema, objetivo e público para gerar o conteúdo denso.',
+      inputLabel: 'Tema do conteúdo denso'
+    },
+    seven: {
+      helper:
+        'Defina o tema com 7 itens que serão explicados em 10 slides (1 hook, 1 enquadramento, 7 itens, 1 CTA).',
+      placeholder:
+        'Ex: 7 funções essenciais do tidyverse para BI rápido; público: analistas júnior; objetivo: acelerar dashboards.',
+      missingInput: 'Descreva o tema e os 7 itens (ou o recorte) para gerar o carrossel.',
+      inputLabel: 'Tema com 7 itens'
+    },
+    cheat: {
+      helper:
+        'Defina o tema do cheat sheet e público (ex.: comandos Git para cientistas de dados).',
+      placeholder:
+        'Ex: Cheat sheet de pandas para data viz rápida (select, groupby, melt, pivot, plot). Público: analistas junior.',
+      missingInput: 'Descreva o tema e o recorte do cheat sheet para gerar o carrossel.',
+      inputLabel: 'Tema do cheat sheet'
+    }
+  }
+
+  let currentPromptConfig = promptModeConfig[promptMode] ?? promptModeConfig.bio
+
+  $: currentPromptConfig = promptModeConfig[promptMode] ?? promptModeConfig.bio
+
   function buildPrompt(story) {
-    const template = promptMode === 'tech' ? technicalPromptTemplate : biographyPromptTemplate
+    const templateMap = {
+      bio: biographyPromptTemplate,
+      tech: technicalPromptTemplate,
+      dense: densePromptTemplate,
+      seven: sevenItemsPromptTemplate,
+      cheat: cheatSheetPromptTemplate
+    }
+    const template = templateMap[promptMode] ?? biographyPromptTemplate
     return template.replaceAll('{INPUT}', story)
   }
 
@@ -427,10 +604,7 @@ Tema técnico: {INPUT}`
 
   async function generateWithAI() {
     if (!storyInput.trim()) {
-      generationError =
-        promptMode === 'tech'
-          ? 'Descreva o tema técnico em um parágrafo curto antes de gerar.'
-          : 'Descreva a história em um parágrafo curto antes de gerar.'
+      generationError = currentPromptConfig?.missingInput ?? 'Preencha o campo antes de gerar.'
       return
     }
 
@@ -535,21 +709,15 @@ Tema técnico: {INPUT}`
     <div class="panel__section">
       <h2>Geração com OpenAI</h2>
       <p class="muted small">
-        {promptMode === 'tech'
-          ? 'Descreva o tema técnico/conceito. A chave vem de .env.local como VITE_OPENAI_API_KEY (não comitar).'
-          : 'Coloque um parágrafo curto com a história. A chave vem de .env.local como VITE_OPENAI_API_KEY (não comitar).'}
+        {currentPromptConfig.helper}
       </p>
       <label class="sr-only" for="story-input">
-        {promptMode === 'tech' ? 'Tema técnico' : 'Contexto da história'}
+        {currentPromptConfig.inputLabel}
       </label>
       <textarea
         id="story-input"
         rows="4"
-        placeholder={
-          promptMode === 'tech'
-            ? 'Ex: Como usar shap values no XGBoost para explicar previsões de churn...'
-            : 'Ex: Jovem de 17 anos que vendia brigadeiro na escola virou referência em IA...'
-        }
+        placeholder={currentPromptConfig.placeholder}
         bind:value={storyInput}
       ></textarea>
       <div class="generation-actions">
@@ -571,6 +739,9 @@ Tema técnico: {INPUT}`
           <select bind:value={promptMode}>
             <option value="bio">Narrativa / Bio</option>
             <option value="tech">Técnico</option>
+            <option value="dense">Conteúdo denso</option>
+            <option value="seven">Lista de 7 itens (10 slides)</option>
+            <option value="cheat">Cheat sheet</option>
           </select>
         </label>
         <label>
@@ -620,7 +791,7 @@ Tema técnico: {INPUT}`
           <span>Escala título ({heroScale.toFixed(2)}x)</span>
           <input
             type="range"
-            min="0.5"
+            min="0.3"
             max="1.25"
             step="0.05"
             bind:value={heroScale}
@@ -630,7 +801,7 @@ Tema técnico: {INPUT}`
           <span>Escala corpo ({bodyScale.toFixed(2)}x)</span>
           <input
             type="range"
-            min="0.75"
+            min="0.35"
             max="1.25"
             step="0.05"
             bind:value={bodyScale}
@@ -640,7 +811,7 @@ Tema técnico: {INPUT}`
           <span>Escala meta ({metaScale.toFixed(2)}x)</span>
           <input
             type="range"
-            min="0.75"
+            min="0.35"
             max="1.25"
             step="0.05"
             bind:value={metaScale}
@@ -650,7 +821,7 @@ Tema técnico: {INPUT}`
           <span>Escala código ({codeScale.toFixed(2)}x)</span>
           <input
             type="range"
-            min="0.75"
+            min="0.35"
             max="1.5"
             step="0.05"
             bind:value={codeScale}
