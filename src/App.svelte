@@ -170,7 +170,7 @@
   let frameRefs = []
   let heroScale = 0.6
   let bodyScale = 1
-  let metaScale = 1
+  let headerScale = 1
   let codeScale = 1
   let slidesShowHero = slideTemplates.map(() => true)
 
@@ -808,13 +808,13 @@ Tema/assunto: {INPUT}`
           />
         </label>
         <label class="full range-control">
-          <span>Escala meta ({metaScale.toFixed(2)}x)</span>
+          <span>Escala header ({headerScale.toFixed(2)}x)</span>
           <input
             type="range"
             min="0.35"
             max="1.25"
             step="0.05"
-            bind:value={metaScale}
+            bind:value={headerScale}
           />
         </label>
         <label class="full range-control">
@@ -920,7 +920,7 @@ Tema/assunto: {INPUT}`
               type="button"
               class="frame"
               class:frame--active={index === activeSlideIndex}
-              style={`background:${backgroundColor}; color:${accentColor}; font-family:${fontStack}; --hero-size:${heroFontByType[slide.type] ?? '2rem'}; --hero-scale:${heroScale}; --body-scale:${bodyScale}; --meta-scale:${metaScale}; --code-scale:${codeScale};`}
+              style={`background:${backgroundColor}; color:${accentColor}; font-family:${fontStack}; --hero-size:${heroFontByType[slide.type] ?? '2rem'}; --hero-scale:${heroScale}; --body-scale:${bodyScale}; --header-scale:${headerScale}; --code-scale:${codeScale};`}
               on:click={() => focusSlide(index)}
               use:captureFrame={{ index }}
             >

@@ -425,7 +425,7 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--header-scale, 1));
 }
 
 .frame__identity {
@@ -453,20 +453,20 @@ button:disabled {
 .frame__header .name {
   font-weight: 600;
   margin: 0;
-  font-size: calc(1rem * var(--meta-scale, 1));
+  font-size: calc(1rem * var(--header-scale, 1));
 }
 
 .frame__header .handle {
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: calc(0.65rem * var(--meta-scale, 1));
+  font-size: calc(0.65rem * var(--header-scale, 1));
   margin: 0;
   color: #52525b;
 }
 
 .slide-count {
   margin: 0;
-  font-size: calc(0.85rem * var(--meta-scale, 1));
+  font-size: calc(0.85rem * var(--header-scale, 1));
   color: #52525b;
 }
 
